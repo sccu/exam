@@ -36,7 +36,7 @@ public class Matcher {
         System.out.print(states.toString());
 
         Set<State> nextStates = new HashSet<State>();
-        for (State s : states) {
+        for (State s : State.eClosure(states)) {
             Set<State> dest = s.move(c);
             if (dest != null) {
                 nextStates.addAll(dest);

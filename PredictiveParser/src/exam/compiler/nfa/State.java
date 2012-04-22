@@ -3,8 +3,10 @@ package exam.compiler.nfa;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
 
 public class State {
@@ -12,12 +14,17 @@ public class State {
     private static final Set<State> EMPTY_SET = Collections.unmodifiableSet(new HashSet<State>());
 
     public static Set<State> eClosure(Set<State> states) {
-        Set<State> nextStates = new HashSet<State>();
-        nextStates.addAll(states);
-        for (State state : states) {
-            nextStates.addAll(state.eClosure());
+        Set<State> visited = new HashSet<State>();
+        Queue<State> unvisited = new LinkedList<State>();
+        unvisited.addAll(states);
+        while (!unvisited.isEmpty()) {
+            State state = unvisited.poll();
+            if (!visited.contains(state)) {
+                visited.add(state);
+                unvisited.addAll(state.eClosure());
+            }
         }
-        return nextStates;
+        return visited;
     }
 
     public static void resetIds() {

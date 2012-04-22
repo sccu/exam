@@ -1,33 +1,65 @@
 package exam.compiler.nfa;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.PushbackInputStream;
+
 public class Nfa {
 
-    public static Nfa build(String regex) {
+    public static Nfa build(String regex) throws IOException {
         System.out.println("********************************************");
         System.out.println("NFA representing \"" + regex + "\"");
         System.out.println("********************************************");
 
         State.resetIds();
 
-        boolean insideParenthesis = false;
-
-        return buildRecursively(regex);
+        PushbackInputStream is = new PushbackInputStream(new ByteArrayInputStream(regex.getBytes()));
+        return buildInternally(is);
     }
 
-    private static Nfa buildRecursively(String regex) {
+    private static Nfa buildInternally(PushbackInputStream is) throws IOException {
         Nfa current = null;
         boolean escaped = false;
-        for (Character c : regex.toCharArray()) {
+        int c;
+        while ((c = is.read()) != -1) {
             if (escaped) {
                 escaped = false;
             } else {
-                if (c.equals('\\')) {
+                if (c == '\\') {
                     escaped = true;
                     continue;
                 }
             }
 
-            Nfa nfa = new Nfa(c);
+            is.unread(c);
+            Nfa nfa = buildUntilUnion(is);
+            if (current == null) {
+                current = nfa;
+            } else {
+                current.union(nfa);
+            }
+
+        }
+        return current;
+    }
+
+    private static Nfa buildUntilUnion(PushbackInputStream is) throws IOException {
+        Nfa current = null;
+        boolean escaped = false;
+        int c;
+        while ((c = is.read()) != -1) {
+            if (escaped) {
+                escaped = false;
+            } else {
+                if (c == '\\') {
+                    escaped = true;
+                    continue;
+                } else if (c == '|') {
+                    break;
+                }
+            }
+
+            Nfa nfa = new Nfa((char) c);
             if (current == null) {
                 current = nfa;
             } else {
@@ -37,11 +69,11 @@ public class Nfa {
         return current;
     }
 
-    final State initialState;
+    State initialState;
 
     private State finalState;
 
-    public Nfa(Character c) {
+    private Nfa(Character c) {
         initialState = new State(false);
         finalState = new State(true);
         initialState.addTranstion(c, finalState);
@@ -65,5 +97,22 @@ public class Nfa {
         }
         System.out.println();
         return m.isFinal();
+    }
+
+    private void union(Nfa other) {
+        State init = new State(false);
+        State fin = new State(true);
+
+        init.addTranstion(null, initialState);
+        init.addTranstion(null, other.initialState);
+
+        finalState.addTranstion(null, fin);
+        other.finalState.addTranstion(null, fin);
+
+        finalState.setFinal(false);
+        other.finalState.setFinal(false);
+
+        initialState = init;
+        finalState = fin;
     }
 }
