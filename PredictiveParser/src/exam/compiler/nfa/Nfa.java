@@ -6,113 +6,136 @@ import java.io.PushbackInputStream;
 
 public class Nfa {
 
-    public static Nfa build(String regex) throws IOException {
-        System.out.println("********************************************");
-        System.out.println("NFA representing \"" + regex + "\"");
-        System.out.println("********************************************");
+  public static Nfa build(String regex) throws IOException {
+    System.out.println("********************************************");
+    System.out.println("NFA representing \"" + regex + "\"");
+    System.out.println("********************************************");
 
-        State.resetIds();
+    State.resetIds();
 
-        PushbackInputStream is = new PushbackInputStream(new ByteArrayInputStream(regex.getBytes()));
-        return buildInternally(is);
+    PushbackInputStream is = new PushbackInputStream(new ByteArrayInputStream(regex.getBytes()));
+    Nfa result = Nfa.buildInternally(is);
+    if (is.read() == -1) {
+      return result;
+    } else {
+      throw new IllegalArgumentException("Invalid Regular Expression:\"" + regex + "\"");
     }
+  }
 
-    private static Nfa buildInternally(PushbackInputStream is) throws IOException {
-        Nfa current = null;
-        boolean escaped = false;
-        int c;
-        while ((c = is.read()) != -1) {
-            if (escaped) {
-                escaped = false;
-            } else {
-                if (c == '\\') {
-                    escaped = true;
-                    continue;
-                }
-            }
+  private static Nfa buildInternally(PushbackInputStream is) throws IOException {
+    Nfa current = null;
+    while (true) {
+      int c = is.read();
+      if (c == -1) {
+        break;
+      } else if (c == ')') {
+        is.unread(c);
+        break;
+      }
 
-            is.unread(c);
-            Nfa nfa = buildUntilUnion(is);
-            if (current == null) {
-                current = nfa;
-            } else {
-                current.union(nfa);
-            }
+      is.unread(c);
+      Nfa nfa = Nfa.buildUntilUnion(is);
+      if (current == null) {
+        current = nfa;
+      } else {
+        current.union(nfa);
+      }
+    }
+    return current;
+  }
 
+  private static Nfa buildUntilUnion(PushbackInputStream is) throws IOException {
+    Nfa current = new Nfa();
+    boolean escaped = false;
+    int c;
+    while ((c = is.read()) != -1) {
+      if (escaped) {
+        escaped = false;
+      } else {
+        if (c == '\\') {
+          escaped = true;
+          continue;
+        } else if (c == '|') {
+          break;
+        } else if (c == '(') {
+          Nfa nfa = Nfa.buildInternally(is);
+          if (is.read() != ')') {
+            throw new IllegalArgumentException("Parentheses are not matched.");
+          }
+          current.concatenate(nfa);
+          continue;
+        } else if (c == ')') {
+          is.unread(c);
+          break;
         }
-        return current;
+      }
+
+      current.concatenate((char) c);
     }
+    return current;
+  }
 
-    private static Nfa buildUntilUnion(PushbackInputStream is) throws IOException {
-        Nfa current = null;
-        boolean escaped = false;
-        int c;
-        while ((c = is.read()) != -1) {
-            if (escaped) {
-                escaped = false;
-            } else {
-                if (c == '\\') {
-                    escaped = true;
-                    continue;
-                } else if (c == '|') {
-                    break;
-                }
-            }
+  State initialState;
 
-            Nfa nfa = new Nfa((char) c);
-            if (current == null) {
-                current = nfa;
-            } else {
-                current.concatenate(nfa);
-            }
-        }
-        return current;
+  private State finalState;
+
+  /**
+   * 
+   */
+  private Nfa() {
+    this.initialState = this.finalState = new State(true);
+  }
+
+  private Nfa(Character c) {
+    this.initialState = new State(false);
+    this.finalState = new State(true);
+    this.initialState.addTranstion(c, this.finalState);
+  }
+
+  /**
+   * @param c
+   */
+  private void concatenate(char c) {
+    State state = new State(true);
+    this.finalState.addTranstion(c, state);
+    this.finalState.setFinal(false);
+    this.finalState = state;
+  }
+
+  private void concatenate(Nfa nfa) {
+    this.finalState.merge(nfa.initialState);
+    this.finalState = nfa.finalState;
+  }
+
+  public boolean match(String str) {
+    System.out.println("Matching Test for \"" + str + "\"");
+    Matcher m = new Matcher(this);
+    for (char c : str.toCharArray()) {
+      m.move(c);
     }
-
-    State initialState;
-
-    private State finalState;
-
-    private Nfa(Character c) {
-        initialState = new State(false);
-        finalState = new State(true);
-        initialState.addTranstion(c, finalState);
+    if (m.isFinal()) {
+      System.out.println("Matched!!!");
+    } else {
+      System.out.println("NOT Matched!!!");
     }
+    System.out.println();
+    return m.isFinal();
+  }
 
-    private void concatenate(Nfa nfa) {
-        finalState.merge(nfa.initialState);
-        finalState = nfa.finalState;
-    }
+  private void union(Nfa other) {
+    State init = new State(false);
+    State fin = new State(true);
 
-    public boolean match(String str) {
-        System.out.println("Matching Test for \"" + str + "\"");
-        Matcher m = new Matcher(this);
-        for (char c : str.toCharArray()) {
-            m.move(c);
-        }
-        if (m.isFinal()) {
-            System.out.println("Matched!!!");
-        } else {
-            System.out.println("NOT Matched!!!");
-        }
-        System.out.println();
-        return m.isFinal();
-    }
+    init.addTranstion(null, this.initialState);
+    init.addTranstion(null, other.initialState);
 
-    private void union(Nfa other) {
-        State init = new State(false);
-        State fin = new State(true);
+    this.finalState.addTranstion(null, fin);
+    other.finalState.addTranstion(null, fin);
 
-        init.addTranstion(null, initialState);
-        init.addTranstion(null, other.initialState);
+    this.finalState.setFinal(false);
+    other.finalState.setFinal(false);
 
-        finalState.addTranstion(null, fin);
-        other.finalState.addTranstion(null, fin);
-
-        finalState.setFinal(false);
-        other.finalState.setFinal(false);
-
-        initialState = init;
-        finalState = fin;
-    }
+    this.initialState = init;
+    this.finalState = fin;
+  }
 }
