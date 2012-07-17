@@ -21,7 +21,7 @@ import static name.sccu.scope.ScopeSym.*;
 
 %cupsym name.sccu.scope.ScopeSym
 %cup
-// %cupdebug
+%cupdebug
 
 %init{
 	// TODO: code that goes to constructor
@@ -30,6 +30,7 @@ import static name.sccu.scope.ScopeSym.*;
 %{
 	private Symbol sym(int type)
 	{
+	  System.out.println(yytext());
 		return sym(type, yytext());
 	}
 
@@ -45,9 +46,13 @@ import static name.sccu.scope.ScopeSym.*;
 	}
 %}
 
-ANY			=	.
+num     = [0-9]+
+plus    = "+"
+SEMI    = ";"
 
 %%
 
-{ANY}		{	return sym(ANY); }
+{num}   { return sym(num, Double.parseDouble(yytext())); }
+{plus}  { return sym(plus); }
+{SEMI}  { return sym(SEMI); }
 

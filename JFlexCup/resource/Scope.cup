@@ -10,12 +10,16 @@ action code
 {:
 :}
 
-terminal		ANY;
+terminal plus;
+terminal num;
+terminal SEMI;
+non terminal	EXPR, EXPR_LIST;
 
-non terminal	grammar;
+precedence left     plus;
 
-grammar			::=	ANY
-				{:
-				:}
-				
-				;
+EXPR_LIST   ::=     {: System.out.println("start parsing"); :} EXPR:e SEMI
+                    {: RESULT = new Double(((Double)e).doubleValue()); :};
+EXPR        ::=     EXPR:e1 plus EXPR:e2
+                    {: RESULT = new Double(((Double)e1).doubleValue() + ((Double)e2).doubleValue()); :};
+EXPR        ::=     num:n
+                    {: RESULT = new Double(((Double)n).doubleValue()); :};
