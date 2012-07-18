@@ -13,7 +13,7 @@ public class ScopeTest {
 	  String expr = "3+4;";
 	  ScopeCup cup = new ScopeCup(new ScopeLex(new ByteArrayInputStream(expr.getBytes())));
 	  
-	  cup.debug_parse();
+	  cup.parse();
 	}
 
 	@Test
@@ -21,6 +21,7 @@ public class ScopeTest {
 	  String expr = "34+6;";
 	  ScopeLex scanner = new ScopeLex(new ByteArrayInputStream(expr.getBytes()));
 	  
+	  scanner.debug_next_token();
 	  scanner.debug_next_token();
 	  scanner.debug_next_token();
 	  scanner.debug_next_token();

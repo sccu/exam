@@ -11,15 +11,15 @@ action code
 :}
 
 terminal plus;
-terminal num;
+terminal String num;
 terminal SEMI;
-non terminal	EXPR, EXPR_LIST;
+nonterminal	Double EXPR, EXPR_LIST;
 
 precedence left     plus;
 
 EXPR_LIST   ::=     {: System.out.println("start parsing"); :} EXPR:e SEMI
-                    {: RESULT = new Double(((Double)e).doubleValue()); :};
+                    {: RESULT = new Double(e.doubleValue()); System.out.println("Result=" + e); :};
 EXPR        ::=     EXPR:e1 plus EXPR:e2
-                    {: RESULT = new Double(((Double)e1).doubleValue() + ((Double)e2).doubleValue()); :};
+                    {: RESULT = new Double(e1.doubleValue() + e2.doubleValue()); :};
 EXPR        ::=     num:n
-                    {: RESULT = new Double(((Double)n).doubleValue()); :};
+                    {: RESULT = new Double(n); :};

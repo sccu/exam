@@ -52,7 +52,7 @@ SEMI    = ";"
 
 %%
 
-{num}   { return sym(num, Double.parseDouble(yytext())); }
+{num}   { return sym(num); }
 {plus}  { return sym(plus); }
 {SEMI}  { return sym(SEMI); }
 
