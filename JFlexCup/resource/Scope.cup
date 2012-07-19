@@ -10,16 +10,38 @@ action code
 {:
 :}
 
-terminal plus;
-terminal String num;
-terminal SEMI;
-nonterminal	Double EXPR, EXPR_LIST;
+terminal PLUS;
+terminal String NUM;
+terminal SEMI, DOT, LBRACE, RBRACE, EQUAL;
+terminal String PKG;
+terminal String ID;
+terminal String PUBLIC, PRIVATE, STATIC;
+terminal String CLASS;
+nonterminal	Double expr, exprlist;
+nonterminal String java_code, pkg_decl, import_list, class_decl;
+nonterminal pkg_name;
+nonterminal visibility, staticness, class_body;
+nonterminal attr_decls, attr_decl, attr_init;
 
-precedence left     plus;
 
-EXPR_LIST   ::=     {: System.out.println("start parsing"); :} EXPR:e SEMI
-                    {: RESULT = new Double(e.doubleValue()); System.out.println("Result=" + e); :};
-EXPR        ::=     EXPR:e1 plus EXPR:e2
+precedence left     PLUS;
+
+java_code   ::=     pkg_decl import_list class_decl;
+pkg_decl    ::=     PKG pkg_name SEMI;
+pkg_name    ::=     ID:id1 {: System.out.println(id1); :} DOT pkg_name 
+            |       ID;
+import_list ::=     ;
+class_decl  ::=     visibility CLASS ID LBRACE class_body RBRACE;
+visibility  ::=     PUBLIC | PRIVATE | ;
+class_body  ::=     attr_decls;
+attr_decls  ::=     attr_decl attr_decls | ; 
+attr_decl   ::=     visibility staticness ID ID attr_init SEMI;
+staticness  ::=     STATIC |;
+attr_init   ::=     EQUAL expr |;
+
+exprlist    ::=     expr:e SEMI
+                    {: RESULT = e; System.out.println("Result=" + RESULT); :};
+expr        ::=     expr:e1 PLUS expr:e2
                     {: RESULT = new Double(e1.doubleValue() + e2.doubleValue()); :};
-EXPR        ::=     num:n
+expr        ::=     NUM:n
                     {: RESULT = new Double(n); :};

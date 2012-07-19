@@ -36,6 +36,7 @@ import static name.sccu.scope.ScopeSym.*;
 
 	private Symbol sym(int type, Object value)
 	{
+	   print(value);
 		return new Symbol(type, yyline, yycolumn, value);
 	}
 
@@ -44,15 +45,39 @@ import static name.sccu.scope.ScopeSym.*;
 	{
 		throw new IOException("illegal text at line = "+yyline+", column = "+yycolumn+", text = '"+yytext()+"'");
 	}
+	
+	private void print(Object val) {
+	  //System.out.println("DEBUG:" + val);
+	}
 %}
 
-num     = [0-9]+
-plus    = "+"
+DIGIT   = [0-9]
+NUM     = {DIGIT}+
+ALPHA   = [a-zA-Z_]
+PLUS    = "+"
 SEMI    = ";"
+DOT     = "."
+PKG     = "package"
+ID      = {ALPHA}({ALPHA}|{DIGIT})*
+WS      = [\n\r\t\b ]
 
 %%
-
-{num}   { return sym(num); }
-{plus}  { return sym(plus); }
+<YYINITIAL> {WS}+   { }
+"{"     { return sym(LBRACE); }
+"}"     { return sym(RBRACE); }
+"public" { return sym(PUBLIC); }
+"private" { return sym(PRIVATE); }
+"class" { return sym(CLASS); }
+"static" { return sym(STATIC); }
+{PKG}   { return sym(PKG); }
+{ID}    { return sym(ID); }
+{DOT}   { return sym(DOT); }
+{NUM}   { return sym(NUM); }
+{PLUS}  { return sym(PLUS); }
 {SEMI}  { return sym(SEMI); }
+"="     { return sym(EQUAL); }
+
+ <YYINITIAL> . {
+    System.out.println("ERROR: Illegal character: <" + yytext() + ">");
+ }
 
