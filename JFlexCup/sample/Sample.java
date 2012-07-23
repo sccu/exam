@@ -7,4 +7,8 @@ public class Sample {
   private int a;
   private static int a;
   int a = 1;
+  
+  public static void method1 ( ) {
+    ;
+  }
 }

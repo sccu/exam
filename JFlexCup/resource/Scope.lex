@@ -18,6 +18,7 @@ import static name.sccu.scope.ScopeSym.*;
 // %public
 %final
 // %abstract
+%debug
 
 %cupsym name.sccu.scope.ScopeSym
 %cup
@@ -30,7 +31,7 @@ import static name.sccu.scope.ScopeSym.*;
 %{
 	private Symbol sym(int type)
 	{
-	  System.out.println(yytext());
+	  //System.out.println(yytext());
 		return sym(type, yytext());
 	}
 
@@ -65,6 +66,8 @@ WS      = [\n\r\t\b ]
 <YYINITIAL> {WS}+   { }
 "{"     { return sym(LBRACE); }
 "}"     { return sym(RBRACE); }
+"[(]"     { return sym(LPAREN); }
+"[)]"     { return sym(RPAREN); }
 "public" { return sym(PUBLIC); }
 "private" { return sym(PRIVATE); }
 "class" { return sym(CLASS); }

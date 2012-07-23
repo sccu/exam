@@ -12,16 +12,19 @@ action code
 
 terminal PLUS;
 terminal String NUM;
-terminal SEMI, DOT, LBRACE, RBRACE, EQUAL;
+terminal SEMI, DOT, LBRACE, RBRACE, EQUAL, LPAREN, RPAREN;
 terminal String PKG;
 terminal String ID;
 terminal String PUBLIC, PRIVATE, STATIC;
 terminal String CLASS;
+
 nonterminal	Double expr, exprlist;
 nonterminal String java_code, pkg_decl, import_list, class_decl;
 nonterminal pkg_name;
 nonterminal visibility, staticness, class_body;
-nonterminal attr_decls, attr_decl, attr_init;
+nonterminal attr_decls, attr_decl, prop_init, prop_decl;
+nonterminal method_decl, method_body;
+nonterminal stmt_list, stmt;
 
 
 precedence left     PLUS;
@@ -35,9 +38,14 @@ class_decl  ::=     visibility CLASS ID LBRACE class_body RBRACE;
 visibility  ::=     PUBLIC | PRIVATE | ;
 class_body  ::=     attr_decls;
 attr_decls  ::=     attr_decl attr_decls | ; 
-attr_decl   ::=     visibility staticness ID ID attr_init SEMI;
+attr_decl   ::=     prop_decl | method_decl;
+prop_decl   ::=     visibility staticness ID ID prop_init SEMI;
+method_decl ::=     visibility staticness ID LPAREN RPAREN method_body;
+method_body ::=     LBRACE stmt_list RBRACE;
+stmt_list   ::=     stmt_list stmt SEMI | ;
+stmt        ::=     ;
 staticness  ::=     STATIC |;
-attr_init   ::=     EQUAL expr |;
+prop_init   ::=     EQUAL expr |;
 
 exprlist    ::=     expr:e SEMI
                     {: RESULT = e; System.out.println("Result=" + RESULT); :};
